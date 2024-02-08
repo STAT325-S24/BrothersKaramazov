@@ -1,0 +1,38 @@
+---
+title: "XX DATA PACKAGE"
+author: "YOUR NAME"
+date: "2024-01-01"
+date-format: iso
+format: gfm
+editor: source
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(tidyverse)
+library(DiscGolf)
+```
+
+This file describes the XX package.
+
+The package is interesting because XX, YY, and ZZ.
+
+The XX package can be installed by running:
+
+```
+devtools::install_github("nicholasjhorton/DiscGolf")
+library(DiscGolf)
+```
+
+```{r}
+glimpse(DiscGolf)
+```
+
+Here are some sample analyses:
+
+XX
+
+YY
+
+ZZ
