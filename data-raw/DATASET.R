@@ -1,9 +1,25 @@
-## code to prepare `DATASET` dataset goes here
-
 library(tidyverse)
-foo <- tibble(
-  lines = c("this is a test", "this is only a test"),
-  author = c("me", "you")
-)
-usethis::use_data(foo, overwrite = TRUE)
+library(gutenbergr)
+library(stringr)
+library(dplyr)
 
+karamazov_data_original <- gutenberg_download(28054)
+
+karamazov_data <- karamazov_data_original |> 
+  filter(text != "")
+
+karamazov_lines <- karamazov_data |>
+  mutate(linenumber = row_number(),
+         part = cumsum(
+                  str_detect(text, regex("^PART [\\DIVXLC]+$", ignore_case = FALSE))
+                  ),
+         book = cumsum(
+                  str_detect(text, regex("^Book [\\DIVXLC]+\\.", ignore_case = FALSE))
+                  ),
+         chapter = cumsum(
+                  str_detect(text, regex("^Chapter [\\DIVXLC]+", ignore_case = FALSE))
+                  ),
+         ) |>
+  ungroup()
+
+usethis::use_data(karamazov_lines, overwrite = TRUE)
