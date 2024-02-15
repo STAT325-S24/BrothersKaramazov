@@ -1,6 +1,6 @@
 ---
-title: "XX DATA PACKAGE"
-author: "YOUR NAME"
+title: "The Brothers Karamazov Data Package"
+author: "Casey Crary"
 date: "2024-01-01"
 date-format: iso
 format: gfm
@@ -10,29 +10,58 @@ editor: source
 ```{r}
 #| label: setup
 #| include: false
-library(tidyverse)
-library(DiscGolf)
+library(BrothersKaramazov)
+library(tidytext)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
 ```
 
-This file describes the XX package.
+This file describes the BrothersKaramazov package.
 
-The package is interesting because XX, YY, and ZZ.
+This package allows easy analysis of The Brothers Karamazov, an extremely influential work in Russian literature.  
 
-The XX package can be installed by running:
+The BrothersKaramazov package can be installed by running:
 
 ```
-devtools::install_github("nicholasjhorton/DiscGolf")
-library(DiscGolf)
+devtools::install_github("Casey308/BrothersKaramazov")
+library(BrothersKaramazov)
 ```
 
 ```{r}
-glimpse(DiscGolf)
+glimpse(karamazov_lines)
 ```
 
 Here are some sample analyses:
 
-XX
+```{r}
+karamazov_words <- karamazov_lines |>
+  unnest_tokens(word, text) |>
+  anti_join(stop_words, join_by("word")) |>
+  count(word, sort = TRUE) |>
+  mutate(word = reorder(word, n))
 
-YY
+ggplot(data = head(karamazov_words, 10), aes(n, word)) +
+  geom_col() +
+  labs(x = "Count", y = "Word", title = "Most Common Words in 'The Brothers Karamazov'")
+```
 
-ZZ
+We can see from this that the three brothers, Alysoha, Mitya, and Ivan, are all in the most common words in the novel.  It also appears that time is a central theme in the book, as "time," "suddenly," and "day," all relate to time in some way and are among the most prevalent words in the novel.
+
+```{r}
+#| warning: false
+karamazov_sentiments <- karamazov_lines |>
+  unnest_tokens(word, text) |>
+  anti_join(stop_words, join_by("word")) |>
+  inner_join(get_sentiments("bing"), join_by("word")) |>
+  count(chapter, sentiment) |>
+  pivot_wider(names_from = sentiment, values_from = n, values_fill = 0) |>
+  mutate(sentiment = positive - negative)
+
+ggplot(karamazov_sentiments, aes(chapter, sentiment)) +
+  geom_col(show.legend = FALSE) +
+  labs(x = "Chapter Number", y = "Bing Sentiment",
+       title = "Bing Sentiment of Each Chapter")
+```
+
+From this plot we can see that there are only 6 chapters that are more positive than negative based on the Bing lexicon.  This is slightly surprising, as this is considered one of Dostoyevsky's happier works.
