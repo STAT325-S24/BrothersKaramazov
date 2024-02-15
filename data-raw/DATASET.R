@@ -18,8 +18,12 @@ karamazov_lines <- karamazov_data |>
                   ),
          chapter = cumsum(
                   str_detect(text, regex("^Chapter [\\DIVXLC]+", ignore_case = FALSE))
-                  ),
+                  )
          ) |>
-  ungroup()
+  ungroup() |>
+  group_by(book) |>
+  mutate(min = min(chapter),
+         book_chapter = chapter - min) |>
+  select(-min)
 
 usethis::use_data(karamazov_lines, overwrite = TRUE)

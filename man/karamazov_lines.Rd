@@ -15,6 +15,7 @@ A data frame with 30801 rows and 6 columns:
 \item{part}{The part of the work this line is from.}
 \item{book}{The book of the work this line is from.}
 \item{chapter}{The chapter of the work this line is from.  Note, the book repeats chapters, but this does not.}
+\item{book_chapter}{The chapter number from the book.  The chapters here cycle, starting over at 1 everytime there is a new part.}
 }
 }
 }
