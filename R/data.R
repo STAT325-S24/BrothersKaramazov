@@ -1,14 +1,19 @@
-#' My data
+#' Package 'BrothersKaramazov'
 #'
-#' This is more descriptive text about my data.
-#' Even more info is provided here ...
+#' This package contains a dataset of all the lines 
+#' of The Brothers Karamazov by Fyodor Dostoyevsky.  
+#' Included are the line, part, book, and chapter numbers, 
+#' for use when analyzing the text, provided by Project Gutenberg.
 #'
-#' @format ## `foo`
-#' A data frame with XX rows and XX columns:
+#' @format ## `karamazov_lines`
+#' A data frame with 30801 rows and 6 columns:
 #' \describe{
-#'   \item{lines}{lines of text}
-#'   \item{author}{who wrote that line}
-#'   ...
+#'   \item{gutenberg_id}{The ID of this work. The same for all rows.}
+#'   \item{text}{Each entry represents one line of the work, about 60 characters.}
+#'   \item{linenumber}{The line number of the work this line is from.}
+#'   \item{part}{The part of the work this line is from.}
+#'   \item{book}{The book of the work this line is from.}
+#'   \item{chapter}{The chapter of the work this line is from.  Note, the book repeats chapters, but this does not.}
 #' }
-#' @source <https://www.who.int/teams/global-tuberculosis-programme/data>
-"foo"
+#' @source <https://www.gutenberg.org/ebooks/28054>
+"karamazov_lines"
