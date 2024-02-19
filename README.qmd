@@ -1,7 +1,7 @@
 ---
 title: "The Brothers Karamazov Data Package"
 author: "Casey Crary"
-date: "2024-01-01"
+date: "2024-02-19"
 date-format: iso
 format: gfm
 editor: source
@@ -17,9 +17,9 @@ library(dplyr)
 library(ggplot2)
 ```
 
-This file describes the BrothersKaramazov package.
+This file describes the `BrothersKaramazov` package.
 
-This package allows easy analysis of The Brothers Karamazov, an extremely influential work in Russian literature.  
+This package allows easy analysis of "The Brothers Karamazov", an extremely influential work in Russian literature.  
 
 The BrothersKaramazov package can be installed by running:
 
@@ -29,6 +29,7 @@ library(BrothersKaramazov)
 ```
 
 ```{r}
+library(tidyverse)
 glimpse(karamazov_lines)
 ```
 
@@ -46,7 +47,8 @@ ggplot(data = head(karamazov_words, 10), aes(n, word)) +
   labs(x = "Count", y = "Word", title = "Most Common Words in 'The Brothers Karamazov'")
 ```
 
-We can see from this that the three brothers, Alysoha, Mitya, and Ivan, are all in the most common words in the novel.  It also appears that time is a central theme in the book, as "time," "suddenly," and "day," all relate to time in some way and are among the most prevalent words in the novel.
+We can see from this that the three brothers, Alysoha, Mitya, and Ivan, are all in the most common words in the novel.
+It also appears that time is a central theme in the book, as "time," "suddenly," and "day," all relate to time in some way and are among the most prevalent words in the novel.
 
 ```{r}
 #| warning: false
@@ -64,4 +66,5 @@ ggplot(karamazov_sentiments, aes(chapter, sentiment)) +
        title = "Bing Sentiment of Each Chapter")
 ```
 
-From this plot we can see that there are only 6 chapters that are more positive than negative based on the Bing lexicon.  This is slightly surprising, as this is considered one of Dostoyevsky's happier works.
+From this plot we can see that there are only 6 chapters that are more positive than negative based on the Bing lexicon.
+This is slightly surprising, as this is considered one of Dostoyevsky's happier works.
