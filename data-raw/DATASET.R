@@ -8,7 +8,7 @@ karamazov_data_original <- gutenberg_download(28054)
 karamazov_data <- karamazov_data_original |> 
   filter(text != "")
 
-karamazov_lines <- karamazov_data |>
+BrothersKaramazov <- karamazov_data |>
   mutate(linenumber = row_number(),
          part = cumsum(
                   str_detect(text, regex("^PART [\\DIVXLC]+$", ignore_case = FALSE))
@@ -26,4 +26,4 @@ karamazov_lines <- karamazov_data |>
          book_chapter = chapter - min) |>
   select(-min)
 
-usethis::use_data(karamazov_lines, overwrite = TRUE)
+usethis::use_data(BrothersKaramazov, overwrite = TRUE)

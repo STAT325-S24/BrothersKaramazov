@@ -30,13 +30,13 @@ library(BrothersKaramazov)
 ```
 
 ```{r}
-glimpse(karamazov_lines)
+glimpse(BrothersKaramazov)
 ```
 
 Here are some sample analyses:
 
 ```{r}
-karamazov_words <- karamazov_lines |>
+karamazov_words <- BrothersKaramazov |>
   unnest_tokens(word, text) |>
   anti_join(stop_words, join_by("word")) |>
   count(word, sort = TRUE) |>
@@ -52,7 +52,7 @@ It also appears that time is a central theme in the book, as "time," "suddenly,"
 
 ```{r}
 #| warning: false
-karamazov_sentiments <- karamazov_lines |>
+karamazov_sentiments <- BrothersKaramazov |>
   unnest_tokens(word, text) |>
   anti_join(stop_words, join_by("word")) |>
   inner_join(get_sentiments("bing"), join_by("word")) |>
