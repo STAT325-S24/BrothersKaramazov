@@ -15,6 +15,7 @@ library(tidytext)
 library(tidyr)
 library(dplyr)
 library(ggplot2)
+library(tidyverse)
 ```
 
 This file describes the `BrothersKaramazov` package.
@@ -29,7 +30,6 @@ library(BrothersKaramazov)
 ```
 
 ```{r}
-library(tidyverse)
 glimpse(karamazov_lines)
 ```
 

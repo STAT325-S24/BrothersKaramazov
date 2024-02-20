@@ -1,10 +1,10 @@
 # The Brothers Karamazov Data Package
 Casey Crary
-2024-01-01
+2024-02-19
 
-This file describes the BrothersKaramazov package.
+This file describes the `BrothersKaramazov` package.
 
-This package allows easy analysis of The Brothers Karamazov, an
+This package allows easy analysis of “The Brothers Karamazov”, an
 extremely influential work in Russian literature.
 
 The BrothersKaramazov package can be installed by running:
