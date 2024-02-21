@@ -1,0 +1,31 @@
+---
+title: "STAT325: named entity recognition analysis of XX"
+author: "XX YOUR NAME HERE XX"
+date: "2024-02-22"
+date-format: iso
+format: pdf
+editor: source
+---
+  
+```{r}
+#| label: setup
+#| include: false
+library(mosaic)
+library(tidyverse)
+library(tidytext)
+library(nametagger)
+library(tictoc)
+```
+
+
+
+```{r}
+#| cache: true
+#| label: download_model
+# see https://ufal.mff.cuni.cz/nametag/1/users-manual
+model <- nametagger_download_model("english-conll-140408", model_dir = tempdir())
+```
+
+```{r}
+# load your data package data
+# run the named entity recognition model
