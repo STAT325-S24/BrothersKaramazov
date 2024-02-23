@@ -24,6 +24,7 @@ BrothersKaramazov <- karamazov_data |>
   group_by(book) |>
   mutate(min = min(chapter),
          book_chapter = chapter - min) |>
-  select(-min)
+  select(-min) |>
+  ungroup()
 
 usethis::use_data(BrothersKaramazov, overwrite = TRUE)
