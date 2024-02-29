@@ -1,0 +1,96 @@
+---
+title: "foo"
+format: pdf
+editor: source
+---
+
+```{r}
+library(dplyr)
+library(janeaustenr)
+library(tidytext)
+library(BrothersKaramazov)
+library(ggplot2)
+#-------------
+book_words <- BrothersKaramazov |>
+  ungroup() |>
+  select(text, part) |>
+  rename(book = "part") |>
+  unnest_tokens(word, text) |>
+  count(book, word, sort = TRUE)
+#----
+close_sentences <- function(i_pattern, i_word_dist) {
+  # caps matter
+  lines <- BrothersKaramazov |>
+    filter(grepl(i_pattern, text)) |>
+    pull(linenumber)
+  close_lines <- lines
+  for(i in 1:i_word_dist) {
+    close_lines <- c(close_lines, lines+i, lines-i)
+  }
+  cleaned <- sort(unique(close_lines))[close_lines > -1]
+  to_return <- BrothersKaramazov |>
+    filter(linenumber %in% cleaned)
+  return(to_return)
+}
+
+close_sentences("Zos", 5)
+
+close_words <- function(i_pattern, i_word_dist) {
+  # all lowercase, so lowercase input pattern to make my life easier
+  i_pattern <- tolower(i_pattern)
+  
+  words <- BrothersKaramazov |>
+    unnest_tokens(word, text) |>
+    mutate(row = row_number())
+
+  word_numbers <- words |>
+    filter(grepl(i_pattern, word)) |>
+    pull(row)
+  
+  close_words <- word_numbers
+  for(i in 1:i_word_dist) {
+    close_words <- c(close_words, word_numbers+i, word_numbers-i)
+  }
+  cleaned <- sort(unique(close_words))[close_words > -1]
+  to_return <- words |>
+    filter(row %in% cleaned)
+  return(to_return)
+}
+
+close_words("Kara", 5)
+
+in_chapter <- function(i_pattern) {
+  chaps <- BrothersKaramazov |>
+    filter(grepl(i_pattern, text)) |>
+    pull(chapter)
+  to_return <- BrothersKaramazov |>
+    filter(chapter %in% chaps)
+  return(to_return)
+}
+
+in_chapter("Kara")
+
+in_book <- function(i_pattern) {
+  books <- BrothersKaramazov |>
+    filter(grepl(i_pattern, text)) |>
+    pull(book)
+  to_return <- BrothersKaramazov |>
+    filter(book %in% books)
+  return(to_return)
+}
+
+in_book("Kara")
+
+in_part <- function(i_pattern) {
+  parts <- BrothersKaramazov |>
+    filter(grepl(i_pattern, text)) |>
+    pull(part)
+  to_return <- BrothersKaramazov |>
+    filter(part %in% parts)
+  return(to_return)
+}
+
+in_part("Kara")
+```
+
+

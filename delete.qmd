@@ -1,0 +1,116 @@
+---
+title: "The Brothers Karamazov Data Package"
+author: "Casey Crary"
+date: "2024-02-19"
+date-format: iso
+format: gfm
+editor: source
+---
+
+```{r}
+#| label: setup
+#| include: false
+library(BrothersKaramazov)
+library(tidytext)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(tidyverse)
+library(nametagger)
+```
+
+This file describes the `BrothersKaramazov` package.
+
+This package allows easy analysis of "The Brothers Karamazov", an extremely influential work in Russian literature.  
+
+The BrothersKaramazov package can be installed by running:
+
+```{r}
+glimpse(BrothersKaramazov)
+
+karamazov_words <- BrothersKaramazov |>
+  unnest_tokens(word, text) |>
+  anti_join(stop_words, join_by("word")) |>
+  count(word, sort = TRUE) |>
+  mutate(word = reorder(word, n))
+
+ggplot(data = head(karamazov_words, 10), aes(n, word)) +
+  geom_col() +
+  labs(x = "Count", y = "Word", title = "Most Common Words in 'The Brothers Karamazov'")
+```
+
+```{r}
+shattuck <- BrothersKaramazov |>
+  janitor::clean_names() |>
+  mutate(
+    doc_id = 1,
+    sentence_id = row_number(),
+    text = stringr::str_replace_all(text, "[[:space:][:punct:]]+", "\n")
+  )
+
+glimpse(shattuck)
+
+
+model <- nametagger_download_model("english-conll-140408",
+                                   model_dir = tempdir())
+results <- predict(model, shattuck)
+mosaic::tally(~ entity, margins = TRUE, data = results)
+
+a <- results |>
+  filter(entity != "O")
+
+b <- a |>
+  mutate(sum = cumsum(grepl("B", entity))) |>
+  group_by(sum) |>
+  mutate(new_term = paste(term, collapse = " ")) |>
+  filter(grepl("B", entity))
+
+c <- b |> 
+  group_by(new_term) |>
+  count() |>
+  arrange(desc(n))
+
+stop_names <- a |> group_by(term) |> count() |> arrange(desc(n))
+
+stop_names <- stop_names |> mutate(term = tolower(term))
+
+foo <- total_words |>
+  anti_join(stop_names, join_by(word == term)) |>
+  anti_join(stop_words, join_by(word)) |>
+  ungroup() |>
+  count(word, part) |>
+  arrange(desc(n)) 
+
+ggplot(data = head(foo, 100), aes(x=word, y=n)) +
+  geom_point()
+
+freq_by_rank <- foo |>
+  group_by(part) |>
+  mutate(rank = row_number(), 
+         total = sum(n),
+         term_frequency = n/total) |>
+  ungroup() |>
+  head(100000)
+
+freq_by_rank |>
+  ggplot(aes(rank, term_frequency, color = book)) + 
+  geom_line(linewidth = 1.1, alpha = 0.8, show.legend = FALSE) + 
+  scale_x_log10() +
+  scale_y_log10()
+
+
+
+#----------
+b <- a |>
+  mutate(sum = cumsum(grepl("B-LOC", entity))) |>
+  group_by(sum) |>
+  mutate(new_term = paste(term, collapse = " ")) |>
+  filter(entity == "B-LOC")
+c <- b |> 
+  group_by(new_term) |>
+  count() |>
+  arrange(desc(n))
+c
+#----------
+
+```
