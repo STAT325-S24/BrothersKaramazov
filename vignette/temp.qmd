@@ -8,6 +8,7 @@ editor: source
 library(dplyr)
 library(janeaustenr)
 library(tidytext)
+library(BrothersKaramazov)
 
 book_words <- BrothersKaramazov |>
   ungroup() |>
@@ -16,14 +17,12 @@ book_words <- BrothersKaramazov |>
   unnest_tokens(word, text) |>
   count(book, word, sort = TRUE)
 
-book_words
 
 total_words <- book_words %>% 
   group_by(book) %>% 
   summarize(total = sum(n))
 
 book_words <- left_join(book_words, total_words)
-book_words
 
 library(ggplot2)
 ggplot(book_words, aes(n/total, fill = book)) +

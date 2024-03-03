@@ -33,7 +33,7 @@ close_sentences <- function(i_pattern, i_word_dist) {
   return(to_return)
 }
 
-close_sentences("Zos", 5)
+close_sentences("Chapter", 5)
 
 close_words <- function(i_pattern, i_word_dist) {
   # all lowercase, so lowercase input pattern to make my life easier
@@ -57,7 +57,7 @@ close_words <- function(i_pattern, i_word_dist) {
   return(to_return)
 }
 
-close_words("Kara", 5)
+close_words("Chapter", 5)
 
 in_chapter <- function(i_pattern) {
   chaps <- BrothersKaramazov |>
