@@ -4,7 +4,7 @@ library(stringr)
 library(dplyr)
 
 karamazov_data_original <- gutenberg_download(28054)
-
+  
 karamazov_data <- karamazov_data_original |> 
   filter(text != "")
 
@@ -25,6 +25,9 @@ BrothersKaramazov <- karamazov_data |>
   mutate(min = min(chapter),
          book_chapter = chapter - min) |>
   select(-min) |>
-  ungroup()
+  ungroup() |>
+  mutate(
+    text = gsub("’", "'", text)
+  )
 
 usethis::use_data(BrothersKaramazov, overwrite = TRUE)
