@@ -5,7 +5,7 @@
 #' Included are the line, part, book, and chapter numbers, 
 #' for use when analyzing the text, provided by Project Gutenberg.
 #'
-#' @format ## `karamazov_lines`
+#' @format ## `BrothersKaramazov`
 #' A data frame with 30801 rows and 6 columns:
 #' \describe{
 #'   \item{gutenberg_id}{The ID of this work. The same for all rows.}
@@ -17,4 +17,4 @@
 #'   \item{book_chapter}{The chapter number from the book.  The chapters here cycle, starting over at 1 everytime there is a new part.}
 #' }
 #' @source <https://www.gutenberg.org/ebooks/28054>
-"karamazov_lines"
+"BrothersKaramazov"
