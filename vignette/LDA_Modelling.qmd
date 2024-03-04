@@ -35,24 +35,26 @@ To perform LDA modelling with the text of the Brothers Karamazov, we first need 
 ```{r}
 bk_dtm <- BrothersKaramazov_words |>
   cast_dtm(book, word, n)
+generate_lda_plot <- function(k_val, input_dtm, words_to_display) {
+  bk_lda <- LDA(input_dtm, k = k_val, control = list(seed = 325))
 
-k_val <- 4
-bk_lda <- LDA(bk_dtm, k = k_val, control = list(seed = 325))
+  bk_topics <- tidy(bk_lda, matrix = "beta")
 
-bk_topics <- tidy(bk_lda, matrix = "beta")
+  bk_top_terms <- bk_topics |>
+    group_by(topic) |>
+    slice_max(beta, n = words_to_display) |> 
+    ungroup() |>
+    arrange(topic, -beta)
 
-bk_top_terms <- bk_topics |>
-  group_by(topic) |>
-  slice_max(beta, n = 12) |> 
-  ungroup() |>
-  arrange(topic, -beta)
-
-bk_top_terms |>
-  mutate(term = reorder_within(term, beta, topic)) |>
-  ggplot(aes(beta, term, fill = factor(topic))) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~ topic, scales = "free") +
-  scale_y_reordered()
+  to_return <- bk_top_terms |>
+    mutate(term = reorder_within(term, beta, topic)) |>
+    ggplot(aes(beta, term, fill = factor(topic))) +
+    geom_col(show.legend = FALSE) +
+    facet_wrap(~ topic, scales = "free") +
+    scale_y_reordered()
+  return(to_return)
+}
+generate_lda_plot(4, bk_dtm, 12)
 ```
 
 Since there are 4 main parts to the book, having 4 topics makes a reasonable amount of sense.  Topic 1 is focused on Mitya, a shortening of Dmitri, which is also present in the list.  It includes the name of his lover "Grushenka," and refence to the three "thousand" Rubles he allegedly stole.  It also perhaps is about the patricide he allegedly commits, considering words such as "cried" appear.  Topic 2 seems to be about the time Alyosha spends in the monastery, with words like "love" and "elder" showing up, two words associated with Elder Zossima, the eldest monk at the monastery.  Topic 3 seems to be about Alyosha's interactions with Kolya and Ilusha, two school children Alyosha gets involved in conversation with.  Topic 4 seems to be about Mitya again, although this time about the actual trial he is on for the patricide.  Words like "evidence" and "prosecutor" make this topic more clear than the others.  
@@ -68,23 +70,7 @@ BrothersKaramazov_words <- BrothersKaramazov_words |>
 bk_dtm <- BrothersKaramazov_words |>
   cast_dtm(book, word, n)
 
-k_val <- 4
-bk_lda <- LDA(bk_dtm, k = k_val, control = list(seed = 325))
-
-bk_topics <- tidy(bk_lda, matrix = "beta")
-
-bk_top_terms <- bk_topics |>
-  group_by(topic) |>
-  slice_max(beta, n = 12) |> 
-  ungroup() |>
-  arrange(topic, -beta)
-
-bk_top_terms |>
-  mutate(term = reorder_within(term, beta, topic)) |>
-  ggplot(aes(beta, term, fill = factor(topic))) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~ topic, scales = "free") +
-  scale_y_reordered()
+generate_lda_plot(4, bk_dtm, 12)
 ```
 
 The topics here are very similar to what they were above.  Topic 1 still focuses on Mitya and his various crimes.  Topic 2 seems to have swapped to what topic 4 was about, the trial.  Topic 3 still focuses on the chapters about the monastery and Elder Zosima.  Topic 4 is the main change in the topics after removing Alyosha.  Instead of having a topic about Alysoha and the school children, there is now a topic that seems to just have a variety of popular words that don't appear in any other topic, such as the character "Smerdyakov."
