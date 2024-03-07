@@ -4,6 +4,10 @@ library(tidyverse)
 library(tidytext)
 library(topicmodels)
 
+file_name <- "~/GitHub/BrothersKaramazov/data/anno_bk.Rds"
+stopifnot(file.exists(file_name))
+anno <- readRDS(file_name)
+
 BrothersKaramazov_words <- BrothersKaramazov |>
   filter(book != 0) |>
   unnest_tokens(word, text, token = "words") |>
@@ -11,6 +15,7 @@ BrothersKaramazov_words <- BrothersKaramazov |>
   group_by(book, word) |> 
   count() |>
   ungroup()
+
 
 
 generate_top_words <- function(k_val, input_dtm, words_to_display) {
@@ -36,7 +41,6 @@ generate_lda_plot <- function(input_top_words) {
   return(to_return)
 }
 
-
 DELETE <- BrothersKaramazov |>
   filter(book_chapter == 12) |>
   select(text) |>
@@ -55,12 +59,10 @@ ui <- navbarPage("'The Brothers Karamazov'",
            uiOutput("tab"),
            wellPanel(
              DELETE
-             
            )
            )),
     tabPanel(
       title = "Topic Modelling", 
-      # Sidebar with a slider input for number of bins 
       sidebarLayout(
         sidebarPanel(
           sliderInput("k_val",
@@ -78,11 +80,29 @@ ui <- navbarPage("'The Brothers Karamazov'",
         )
       )
     
+    ),
+    tabPanel(
+      title = "Named entity",
+      sidebarLayout(
+        sidebarPanel(
+          radioButtons("e_or_t",
+                      "Entity or Token:",
+                      c("entity", 
+                        "token")),
+          selectInput("specific",
+                      "Choose a specific type/entity:",
+                      c())
+        ),
+        mainPanel(
+          dataTableOutput("nameTable"),
+          
+        )
+      )
+      
     )
 )
 
-# Define server logic required to draw a histogram
-server <- function(input, output) {
+server <- function(input, output, session) {
   current_dtm <- reactive({
     a <- strsplit(input$rem, ",") |>
       unlist() |>
@@ -93,12 +113,45 @@ server <- function(input, output) {
       cast_dtm(book, word, n)
     return(to_return)
   })
+  uSIE <- reactive({
+    updateSelectInput(session, "specific",
+                        choices = unique(anno$entity$entity_type)
+      )
+  })
+  uSIT <- reactive({
+    updateSelectInput(session, "specific",
+                      choices = unique(anno$token$upos)
+    )
+  })
+  
   
   observeEvent(input$makePlot, {
     output$distPlot <- renderPlot({
       to_plot <- generate_top_words(input$k_val, current_dtm(), 12)
       generate_lda_plot(to_plot)
     })
+  })
+  
+  output$nameTable <- renderDataTable({
+    if(input$e_or_t == "entity") {
+      uSIE()
+      temp <- anno$entity |>
+        filter(entity_type == input$specific) |>
+        group_by(entity) |>
+        summarize(count = n(), avg_section = mean(doc_id), .groups = "drop") |>
+        arrange(desc(count))
+        
+    } else if(input$e_or_t == "token") {
+      uSIT()
+      temp <- anno$token |>
+        filter(upos == input$specific) |>
+        group_by(lemma) |>
+        summarize(count = n(), .groups = "drop") |>
+        arrange(desc(count))
+    } else {
+      cat("fail 0 shouldnt reach line 130")
+    }
+    return(temp)
   })
   
 }
