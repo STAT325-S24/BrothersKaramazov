@@ -2,6 +2,8 @@ library(tidyverse)
 library(gutenbergr)
 library(stringr)
 library(dplyr)
+library(cleanNLP)
+library(reticulate)
 
 karamazov_data_original <- gutenberg_download(28054)
   
@@ -32,4 +34,13 @@ BrothersKaramazov <- karamazov_data |>
   ) |>
   select(gutenberg_id, text, part, book, chapter, book_chapter, paragraph, linenumber)
 
+
 usethis::use_data(BrothersKaramazov, overwrite = TRUE)
+
+
+py_config()
+reticulate::import("cleannlp") 
+cnlp_init_spacy(model_name = "en_core_web_sm")
+AnnotatedBK <- cnlp_annotate(BrothersKaramazov)
+
+usethis::use_data(AnnotatedBK, overwrite = TRUE)

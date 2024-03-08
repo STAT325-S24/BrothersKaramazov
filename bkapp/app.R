@@ -43,7 +43,7 @@ generate_lda_plot <- function(input_top_words) {
   return(to_return)
 }
 
-DELETE <- BrothersKaramazov |>
+one_chap <- BrothersKaramazov |>
   filter(book_chapter == 11) |>
   filter(paragraph < min(paragraph) + 3) |>
   unnest_tokens(word, text, to_lower = FALSE) 
@@ -52,9 +52,8 @@ a <- anno$entity |>
   filter(entity_type == "PERSON") |>
   group_by(entity) |>
   summarize(count = n()) |>
-  filter(count > 10)
-
-b <- left_join(DELETE, a, join_by(word == entity))
+  filter(count > 10) |>
+  left_join(one_chap, join_by(entity == word))
 c <- b |>
   select(-gutenberg_id, -part, -book, -chapter, -book_chapter,
          -linenumber)
@@ -65,7 +64,6 @@ for(i in 1:nrow(c)) {
   } else {
     s <- paste(s, c[i,2])
   }
-  
   if(i == 2) {
     s <- paste(s, "<br>")
   }

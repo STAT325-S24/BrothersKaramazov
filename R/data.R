@@ -18,3 +18,20 @@
 #' }
 #' @source <https://www.gutenberg.org/ebooks/28054>
 "BrothersKaramazov"
+#' Annotated Brothers K
+#'
+#' An annotated version of "The Brothers Karamazov."  See the cleanNLP package 
+#' for more information on what this entails.
+#'  
+#' @format ## `AnnotatedBK`
+#' A list with 3 elements:
+#' \describe{
+#'   \item{token}{Contains token information}
+#'   \item{entity}{Contains entity information}
+#'   \item{document}{Contains document information}
+#' }
+#' @source <https://www.gutenberg.org/ebooks/28054>
+"AnnotatedBK"
+
+
+

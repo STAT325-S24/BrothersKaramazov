@@ -7,3 +7,4 @@ vignette
 README.qmd
 ^.*\.Rproj$
 README_files
+bkapp
