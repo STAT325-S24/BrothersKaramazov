@@ -5,10 +5,6 @@ library(tidytext)
 library(topicmodels)
 library(shinybusy)
 
-file_name <- "~/GitHub/BrothersKaramazov/data/anno_bk.Rds"
-stopifnot(file.exists(file_name))
-anno <- readRDS(file_name)
-
 generate_bkw <- function(grouping_var) {
   grouping_var <- enquo(grouping_var)
   BrothersKaramazov |>
@@ -48,13 +44,14 @@ one_chap <- BrothersKaramazov |>
   filter(paragraph < min(paragraph) + 3) |>
   unnest_tokens(word, text, to_lower = FALSE) 
 
-a <- anno$entity |>
+a <- AnnotatedBK$entity |>
   filter(entity_type == "PERSON") |>
   group_by(entity) |>
   summarize(count = n()) |>
-  filter(count > 10) |>
-  left_join(one_chap, join_by(entity == word))
-c <- b |>
+  filter(count > 10)
+
+a <- left_join(one_chap, a, join_by(word == entity))
+c <- a |>
   select(-gutenberg_id, -part, -book, -chapter, -book_chapter,
          -linenumber)
 s <- ""
@@ -68,6 +65,7 @@ for(i in 1:nrow(c)) {
     s <- paste(s, "<br>")
   }
   if(i != nrow(c)) {
+    cat(c$paragraph[i])
     if(c$paragraph[i] < c$paragraph[i+1]) {
       s <- paste(s, "<br>")
     }
@@ -150,13 +148,13 @@ server <- function(input, output, session) {
   uSIE <- reactive({
     temp <- input$e_or_t
     updateSelectInput(session, "specific",
-                        choices = unique(anno$entity$entity_type)
+                        choices = unique(AnnotatedBK$entity$entity_type)
       )
   })
   uSIT <- reactive({
     temp <- input$e_or_t
     updateSelectInput(session, "specific",
-                      choices = unique(anno$token$upos)
+                      choices = unique(AnnotatedBK$token$upos)
     )
   })
   observeEvent(input$makePlot, {
@@ -168,7 +166,7 @@ server <- function(input, output, session) {
   output$nameTable <- renderDataTable({
     if(input$e_or_t == "entity") {
       uSIE()
-      temp <- anno$entity |>
+      temp <- AnnotatedBK$entity |>
         filter(entity_type == input$specific) |>
         group_by(entity) |>
         summarize(count = n(), avg_section = mean(doc_id), .groups = "drop") |>
@@ -176,7 +174,7 @@ server <- function(input, output, session) {
         
     } else if(input$e_or_t == "token") {
       uSIT()
-      temp <- anno$token |>
+      temp <- AnnotatedBK$token |>
         filter(upos == input$specific) |>
         group_by(lemma) |>
         summarize(count = n(), .groups = "drop") |>

@@ -18,7 +18,7 @@
 #' }
 #' @source <https://www.gutenberg.org/ebooks/28054>
 "BrothersKaramazov"
-#' Annotated Brothers K
+#' Annotated Brothers Karamazov
 #'
 #' An annotated version of "The Brothers Karamazov."  See the cleanNLP package 
 #' for more information on what this entails.
