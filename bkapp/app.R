@@ -3,20 +3,22 @@ library(BrothersKaramazov)
 library(tidyverse)
 library(tidytext)
 library(topicmodels)
+library(shinybusy)
 
 file_name <- "~/GitHub/BrothersKaramazov/data/anno_bk.Rds"
 stopifnot(file.exists(file_name))
 anno <- readRDS(file_name)
 
-BrothersKaramazov_words <- BrothersKaramazov |>
-  filter(book != 0) |>
-  unnest_tokens(word, text, token = "words") |>
-  anti_join(stop_words, join_by(word)) |>
-  group_by(book, word) |> 
-  count() |>
-  ungroup()
-
-
+generate_bkw <- function(grouping_var) {
+  grouping_var <- enquo(grouping_var)
+  BrothersKaramazov |>
+    filter(book != 0) |>
+    unnest_tokens(word, text, token = "words") |>
+    anti_join(stop_words, join_by(word)) |>
+    group_by(.data[[grouping_var]], word) |> 
+    count() |>
+    ungroup()
+}
 
 generate_top_words <- function(k_val, input_dtm, words_to_display) {
   bk_lda <- LDA(input_dtm, k = k_val, control = list(seed = 325))
@@ -42,23 +44,47 @@ generate_lda_plot <- function(input_top_words) {
 }
 
 DELETE <- BrothersKaramazov |>
-  filter(book_chapter == 12) |>
-  select(text) |>
-  head(6) |>
-  pull(text) |>
-  paste(collapse = " ", sep = "<br/>")
+  filter(book_chapter == 11) |>
+  filter(paragraph < min(paragraph) + 3) |>
+  unnest_tokens(word, text, to_lower = FALSE) 
+
+a <- anno$entity |>
+  filter(entity_type == "PERSON") |>
+  group_by(entity) |>
+  summarize(count = n()) |>
+  filter(count > 10)
+
+b <- left_join(DELETE, a, join_by(word == entity))
+c <- b |>
+  select(-gutenberg_id, -part, -book, -chapter, -book_chapter,
+         -linenumber)
+s <- ""
+for(i in 1:nrow(c)) {
+  if(!is.na(c[i,3])) {
+    s <- paste(s ," <strong>",c[i,2], "</strong>", sep = "")
+  } else {
+    s <- paste(s, c[i,2])
+  }
   
-
-
-# Define UI for application that draws a histogram
+  if(i == 2) {
+    s <- paste(s, "<br>")
+  }
+  if(i != nrow(c)) {
+    if(c$paragraph[i] < c$paragraph[i+1]) {
+      s <- paste(s, "<br>")
+    }
+  }
+}
+DELETE2 <- s
+  
 ui <- navbarPage("'The Brothers Karamazov'", 
     tabPanel(
         title = "About the book",
          mainPanel(
            p("This is a sentence about the book."),
            uiOutput("tab"),
-           wellPanel(
-             DELETE
+           tags$p(
+             HTML(DELETE2)
            )
            )),
     tabPanel(
@@ -70,8 +96,15 @@ ui <- navbarPage("'The Brothers Karamazov'",
                       min = 2,
                       max = 9,
                       value = 4),
-          textInput("rem",
-                    "Remove these words (separate by commas):"),
+          selectizeInput("rem", "Add words to remove", "", 
+                         multiple = TRUE, 
+                         options = list(
+                           'plugins' = list('remove_button'),
+                           'create' = TRUE,
+                           'persist' = TRUE
+                         )),
+          radioButtons("delete21", "uhhhh",
+                       choices = tail(names(BrothersKaramazov), 6)),
           actionButton("makePlot", "Make the plot:")
           
         ),
@@ -95,43 +128,45 @@ ui <- navbarPage("'The Brothers Karamazov'",
         ),
         mainPanel(
           dataTableOutput("nameTable"),
-          
         )
       )
-      
     )
 )
 
 server <- function(input, output, session) {
+
   current_dtm <- reactive({
-    a <- strsplit(input$rem, ",") |>
+    a <- input$rem |>
       unlist() |>
       str_trim()
+    
     b <- tibble(word = a)
-    to_return <- BrothersKaramazov_words |>
-      anti_join(b, join_by(word)) |>
+    
+    to_return <- generate_bkw(input$delete21) |>
+      anti_join(b, join_by(word)) 
+    colnames(to_return) <- c("book", "word", "n")   # not good coding
+    to_return <- to_return |>
       cast_dtm(book, word, n)
     return(to_return)
   })
   uSIE <- reactive({
+    temp <- input$e_or_t
     updateSelectInput(session, "specific",
                         choices = unique(anno$entity$entity_type)
       )
   })
   uSIT <- reactive({
+    temp <- input$e_or_t
     updateSelectInput(session, "specific",
                       choices = unique(anno$token$upos)
     )
   })
-  
-  
   observeEvent(input$makePlot, {
     output$distPlot <- renderPlot({
       to_plot <- generate_top_words(input$k_val, current_dtm(), 12)
       generate_lda_plot(to_plot)
     })
   })
-  
   output$nameTable <- renderDataTable({
     if(input$e_or_t == "entity") {
       uSIE()

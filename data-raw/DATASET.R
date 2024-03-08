@@ -6,6 +6,7 @@ library(dplyr)
 karamazov_data_original <- gutenberg_download(28054)
   
 karamazov_data <- karamazov_data_original |> 
+  mutate(paragraph = cumsum(text == "")) |>
   filter(text != "")
 
 BrothersKaramazov <- karamazov_data |>
@@ -28,6 +29,7 @@ BrothersKaramazov <- karamazov_data |>
   ungroup() |>
   mutate(
     text = gsub("’", "'", text)
-  )
+  ) |>
+  select(gutenberg_id, text, part, book, chapter, book_chapter, paragraph, linenumber)
 
 usethis::use_data(BrothersKaramazov, overwrite = TRUE)
