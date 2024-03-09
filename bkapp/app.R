@@ -30,49 +30,53 @@ generate_top_words <- function(k_val, input_dtm, words_to_display) {
 }
 
 generate_lda_plot <- function(input_top_words) {
+  topic_count <- input_top_words |> select(topic) |> unique() |> count()
+  in_each <- nrow(input_top_words)/topic_count
+  title_string <- paste0("Top ", in_each, " Words for each of ",
+                         topic_count, " Topics")
+                       
   to_return <- input_top_words |>
     mutate(term = reorder_within(term, beta, topic)) |>
     ggplot(aes(beta, term, fill = factor(topic))) +
     geom_col(show.legend = FALSE) +
     facet_wrap(~ topic, scales = "free") +
-    scale_y_reordered()
+    scale_y_reordered() +
+    labs(x = "Beta", y = "Term", 
+         title = title_string)
   return(to_return)
 }
 
-one_chap <- BrothersKaramazov |>
-  filter(book_chapter == 11) |>
-  filter(paragraph < min(paragraph) + 3) |>
-  unnest_tokens(word, text, to_lower = FALSE) 
-
-a <- AnnotatedBK$entity |>
+anno <- AnnotatedBK$entity |>
   filter(entity_type == "PERSON") |>
   group_by(entity) |>
   summarize(count = n()) |>
   filter(count > 10)
 
-a <- left_join(one_chap, a, join_by(word == entity))
-c <- a |>
+to_iter <- BrothersKaramazov |>
+  filter(book_chapter == 11) |>
+  filter(paragraph < min(paragraph) + 3) |>
+  unnest_tokens(word, text, to_lower = FALSE) |>
+  left_join(anno, join_by(word == entity)) |>
   select(-gutenberg_id, -part, -book, -chapter, -book_chapter,
          -linenumber)
-s <- ""
-for(i in 1:nrow(c)) {
-  if(!is.na(c[i,3])) {
-    s <- paste(s ," <strong>",c[i,2], "</strong>", sep = "")
+
+excerpt <- ""
+for(i in 1:nrow(to_iter)) {
+  if(!is.na(to_iter[i,3])) {
+    excerpt <- paste(excerpt," <strong>",to_iter[i,2], "</strong>", sep = "")
   } else {
-    s <- paste(s, c[i,2])
+    excerpt <- paste(excerpt, to_iter[i,2])
   }
   if(i == 2) {
-    s <- paste(s, "<br>")
+    excerpt <- paste(excerpt, "<br>")
   }
-  if(i != nrow(c)) {
-    cat(c$paragraph[i])
-    if(c$paragraph[i] < c$paragraph[i+1]) {
-      s <- paste(s, "<br>")
+  if(i != 1) {
+    if(to_iter$paragraph[i] > to_iter$paragraph[i-1]) {
+      excerpt <- paste(excerpt, "<br>")
     }
   }
 }
-DELETE2 <- s
-  
+
 ui <- navbarPage("'The Brothers Karamazov'", 
     tabPanel(
         title = "About the book",
@@ -80,11 +84,12 @@ ui <- navbarPage("'The Brothers Karamazov'",
            p("This is a sentence about the book."),
            uiOutput("tab"),
            tags$p(
-             HTML(DELETE2)
+             HTML(excerpt)
            )
            )),
     tabPanel(
       title = "Topic Modelling", 
+      add_busy_spinner(spin = "cube-grid"),
       sidebarLayout(
         sidebarPanel(
           sliderInput("k_val",
@@ -99,13 +104,14 @@ ui <- navbarPage("'The Brothers Karamazov'",
                            'create' = TRUE,
                            'persist' = TRUE
                          )),
-          radioButtons("delete21", "uhhhh",
+          radioButtons("split", "How to divide up the book:",
                        choices = tail(names(BrothersKaramazov), 6)),
-          actionButton("makePlot", "Make the plot:")
+          actionButton("makePlot", "Make the plot!")
           
         ),
         mainPanel(
-          plotOutput("distPlot")
+          plotOutput("distPlot"),
+          plotOutput("through_novel")
         )
       )
     
@@ -138,7 +144,7 @@ server <- function(input, output, session) {
     
     b <- tibble(word = a)
     
-    to_return <- generate_bkw(input$delete21) |>
+    to_return <- generate_bkw(input$split) |>
       anti_join(b, join_by(word)) 
     colnames(to_return) <- c("book", "word", "n")   # not good coding
     to_return <- to_return |>
@@ -162,14 +168,27 @@ server <- function(input, output, session) {
       to_plot <- generate_top_words(input$k_val, current_dtm(), 12)
       generate_lda_plot(to_plot)
     })
+    output$through_novel <- renderPlot({
+      bk_lda4 <- LDA(current_dtm(), k = 4,
+                     control = list(seed = 1821))
+      bk_gamma <- tidy(bk_lda4, matrix = "gamma") |>
+        mutate(document = as.numeric(document))
+      
+      ggplot(bk_gamma, aes(x = document, y = gamma, color = factor(topic))) +
+        geom_point(position = position_jitter(height = 0.02), alpha = 0.5) +
+        geom_smooth(se = FALSE) +
+        labs(x = paste(input$split), y = "Gamma (Probability this Doc is this Topic)", title = "erm")
+        
+    })
   })
+  
   output$nameTable <- renderDataTable({
     if(input$e_or_t == "entity") {
       uSIE()
       temp <- AnnotatedBK$entity |>
         filter(entity_type == input$specific) |>
         group_by(entity) |>
-        summarize(count = n(), avg_section = mean(doc_id), .groups = "drop") |>
+        summarize(count = n(), .groups = "drop") |>
         arrange(desc(count))
         
     } else if(input$e_or_t == "token") {
@@ -187,5 +206,6 @@ server <- function(input, output, session) {
   
 }
 
-# Run the application 
 shinyApp(ui = ui, server = server)
+
+
