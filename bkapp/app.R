@@ -52,16 +52,26 @@ anno <- AnnotatedBK$entity |>
   summarize(count = n()) |>
   filter(count > 10)
 
+BrothersKaramazov |>
+  filter(book_chapter == 11) |>
+  filter(paragraph < min(paragraph) + 3) |>
+  pull(text)
+
 to_iter <- BrothersKaramazov |>
   filter(book_chapter == 11) |>
   filter(paragraph < min(paragraph) + 3) |>
-  unnest_tokens(word, text, to_lower = FALSE) |>
+  unnest_tokens(word, text, token = stringr::str_split, pattern = "[ \n]", to_lower = FALSE) |>
   left_join(anno, join_by(word == entity)) |>
   select(-gutenberg_id, -part, -book, -chapter, -book_chapter,
          -linenumber)
 
 excerpt <- ""
 for(i in 1:nrow(to_iter)) {
+  if(i != 1) {
+    if(to_iter$paragraph[i] > to_iter$paragraph[i-1]) {
+      excerpt <- paste(excerpt, "<br>")
+    }
+  }
   if(!is.na(to_iter[i,3])) {
     excerpt <- paste(excerpt," <strong>",to_iter[i,2], "</strong>", sep = "")
   } else {
@@ -69,11 +79,6 @@ for(i in 1:nrow(to_iter)) {
   }
   if(i == 2) {
     excerpt <- paste(excerpt, "<br>")
-  }
-  if(i != 1) {
-    if(to_iter$paragraph[i] > to_iter$paragraph[i-1]) {
-      excerpt <- paste(excerpt, "<br>")
-    }
   }
 }
 
@@ -163,24 +168,36 @@ server <- function(input, output, session) {
                       choices = unique(AnnotatedBK$token$upos)
     )
   })
-  observeEvent(input$makePlot, {
-    output$distPlot <- renderPlot({
-      to_plot <- generate_top_words(input$k_val, current_dtm(), 12)
-      generate_lda_plot(to_plot)
-    })
-    output$through_novel <- renderPlot({
-      bk_lda4 <- LDA(current_dtm(), k = 4,
-                     control = list(seed = 1821))
-      bk_gamma <- tidy(bk_lda4, matrix = "gamma") |>
-        mutate(document = as.numeric(document))
-      
-      ggplot(bk_gamma, aes(x = document, y = gamma, color = factor(topic))) +
-        geom_point(position = position_jitter(height = 0.02), alpha = 0.5) +
-        geom_smooth(se = FALSE) +
-        labs(x = paste(input$split), y = "Gamma (Probability this Doc is this Topic)", title = "erm")
-        
-    })
+  
+  foo <- eventReactive(input$makePlot, {
+    to_plot <- generate_top_words(input$k_val,
+                                  current_dtm(),
+                                  12)
+    generate_lda_plot(to_plot)
   })
+  output$distPlot <- renderPlot(foo())
+  
+  foo2 <- eventReactive(input$makePlot, {
+    title_string <- paste("Probability each", isolate(input$split), "is in a certain topic")
+    bk_lda4 <- LDA(isolate(current_dtm()), k = isolate(input$k_val),
+                   control = list(seed = 1821))
+    bk_gamma <- tidy(bk_lda4, matrix = "gamma") |>
+      mutate(document = as.numeric(document))
+    if(nrow(bk_gamma) > 10000) {
+       cat(nrow(bk_gamma), "foo")
+       bk_gamma <- bk_gamma[sample(nrow(bk_gamma), 10000), ]
+    }
+    ggplot(bk_gamma, aes(x = document, y = gamma, color = factor(topic))) +
+      geom_point(position = position_jitter(height = 0.02), alpha = 0.5) +
+      geom_smooth(se = FALSE) +
+      labs(x = paste(isolate(input$split)),
+           y = "Gamma (Probability this Doc is this Topic)",
+           title = title_string)
+    
+  })
+  
+  output$through_novel <- renderPlot(foo2())
+
   
   output$nameTable <- renderDataTable({
     if(input$e_or_t == "entity") {

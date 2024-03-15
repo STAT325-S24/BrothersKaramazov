@@ -1,6 +1,6 @@
 Package: BrothersKaramazov
 Title: Provides the Contents of The Brothers Karamazov for Analysis Use
-Version: 0.0.0.9000
+Version: 0.2
 Authors@R: 
     person("Casey", "Crary", , "ccrary26@amherst.edu", role = c("aut", "cre"))
 Description: This package contains a dataset of all the lines of The 
