@@ -86,8 +86,9 @@ ui <- navbarPage("'The Brothers Karamazov'",
     tabPanel(
         title = "About the book",
          mainPanel(
-           p("This is a sentence about the book."),
+           p("'The Brothers Karamazov' is one of the most influential books in the world of literature.  Written from 1878 to 1880, it was the last work Fyodor Dostoyevsky would ever complete, and is widely regarded as his magnum opus.  The novel is comprised of 12 books and an epilogue, spanning roughly 800 pages.  Within each book we learn about the lives of several members of the Karamazov family, often hearing events from the perspective of everyone involved.  Each character has very different outlooks, such as Alyosha being a devout Christian, while his father is described as a 'sensualist.'  As such, the idea of seeing if we can separate the book into different 'topics' using Latent Dirichlet allocation is extremely appealing."),
            uiOutput("tab"),
+           p("An excerpt from the book is presented below with names highlighted:"),
            tags$p(
              HTML(excerpt)
            )
